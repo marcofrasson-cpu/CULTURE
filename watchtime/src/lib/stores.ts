@@ -13,3 +13,11 @@ export const SEED_STORES = [
   { slug: "mondaine", name: "Mondaine", domain: "www.mondaine.com.br", path: "/relogios", adapter: "vtex" },
   { slug: "seculus", name: "Seculus", domain: "www.seculus.com.br", path: "/relogios", adapter: "vtex" },
 ] as const;
+
+/** Lojas que dividem o mesmo servidor VTEX: lidas uma de cada vez para não tomar 500. */
+export const STORE_GROUP: Record<string, string> = {
+  technos: "grupo-technos",
+  euro: "grupo-technos",
+  fossil: "grupo-technos",
+  timecenter: "grupo-technos",
+};

@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { scrapeStore } from "./scrape";
 import type { ScrapedProduct } from "./scrape/types";
 import { MIN_PUSH_DISCOUNT, discountPct, scoreDeal } from "./score";
-import { SEED_STORES } from "./stores";
+import { SEED_STORES, STORE_GROUP } from "./stores";
 import { sendToAll } from "./push";
 import { brl } from "./money";
 
@@ -32,8 +32,16 @@ export async function scanAll(opts: { onlySlug?: string } = {}): Promise<StoreRe
 
   // 3 lojas por vez: cabe nos 300 s da função mesmo com 2500 itens por loja.
   const queue = [...stores];
+  const busyGroups = new Set<string>();
+  const next = () => {
+    const i = queue.findIndex((s) => !busyGroups.has(STORE_GROUP[s.slug] ?? s.slug));
+    if (i < 0) return undefined;
+    const [s] = queue.splice(i, 1);
+    busyGroups.add(STORE_GROUP[s.slug] ?? s.slug);
+    return s;
+  };
   const worker = async () => {
-    for (let store = queue.shift(); store; store = queue.shift()) {
+    for (let store = next(); store; store = next()) {
       const run = await prisma.scanRun.create({ data: { storeId: store.id } });
       try {
         const { adapter, products } = await scrapeStore(store);
@@ -49,6 +57,8 @@ export async function scanAll(opts: { onlySlug?: string } = {}): Promise<StoreRe
         const error = (e instanceof Error ? e.message : String(e)).slice(0, 900);
         await prisma.scanRun.update({ where: { id: run.id }, data: { finishedAt: new Date(), error } });
         results.push({ slug: store.slug, found: 0, changed: 0, error });
+      } finally {
+        busyGroups.delete(STORE_GROUP[store.slug] ?? store.slug);
       }
     }
   };
