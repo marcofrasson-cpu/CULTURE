@@ -1,4 +1,5 @@
 import { toCents } from "../money";
+import { parseSpecs } from "./specs";
 import { MAX_PAGES, baseUrl, type Adapter, type ScrapedProduct } from "./types";
 
 type VtexItem = {
@@ -13,6 +14,8 @@ type VtexProduct = {
   link?: string;
   linkText?: string;
   items?: VtexItem[];
+  allSpecifications?: string[];
+  [spec: string]: unknown;
 };
 
 /**
@@ -39,7 +42,9 @@ export const vtex: Adapter = {
           const price = toCents(offer?.Price ?? null);
           if (!price) continue;
           const listPrice = toCents(offer?.ListPrice ?? null);
+          const specs = parseSpecs(p.productName, p.allSpecifications ?? [], p);
           out.push({
+            ...specs,
             externalId: p.productId,
             url: p.link ?? `${baseUrl(store.domain)}/${p.linkText}/p`,
             name: p.productName,

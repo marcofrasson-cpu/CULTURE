@@ -35,6 +35,8 @@ model Product {
   maxPrice     Int
   prevPrice    Int?           // preço na varredura anterior
   available    Boolean        @default(true)
+  gender       String?        // masculino | feminino | unissex
+  caseMm       Int?           // diâmetro/largura da caixa em mm
   firstSeenAt  DateTime       @default(now())
   lastSeenAt   DateTime       @default(now())
   lastChangeAt DateTime       @default(now())

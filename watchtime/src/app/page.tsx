@@ -3,14 +3,18 @@ import { DealCard } from "@/components/DealCard";
 import { Filters } from "@/components/Filters";
 import { prisma } from "@/lib/db";
 import { MIN_FEED_DISCOUNT } from "@/lib/score";
+import { GOOD_BRANDS } from "@/lib/brands";
 
 export const dynamic = "force-dynamic";
 
-type SP = Promise<{ q?: string; loja?: string; marca?: string; min?: string }>;
+type SP = Promise<{ q?: string; loja?: string; marca?: string; min?: string; genero?: string; caixa?: string; marcas?: string }>;
 
 export default async function Home({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   const min = Number(sp.min) || MIN_FEED_DISCOUNT;
+  const genero = sp.genero ?? "masculino";
+  const caixa = sp.caixa == null ? 38 : Number(sp.caixa) || 0;
+  const soBoas = sp.marcas !== "todas";
 
   const [stores, brandRows, products] = await Promise.all([
     prisma.store.findMany({ where: { enabled: true }, orderBy: { name: "asc" }, select: { slug: true, name: true } }),
@@ -20,7 +24,9 @@ export default async function Home({ searchParams }: { searchParams: SP }) {
         available: true,
         score: { gte: min },
         ...(sp.loja ? { store: { slug: sp.loja } } : {}),
-        ...(sp.marca ? { brand: sp.marca } : {}),
+        ...(sp.marca ? { brand: sp.marca } : soBoas ? { brand: { in: GOOD_BRANDS, mode: "insensitive" } } : {}),
+        ...(genero !== "todos" ? { gender: genero } : {}),
+        ...(caixa > 0 ? { caseMm: { lte: caixa } } : {}),
         ...(sp.q ? { OR: [{ name: { contains: sp.q, mode: "insensitive" } }, { brand: { contains: sp.q, mode: "insensitive" } }] } : {}),
       },
       orderBy: [{ score: "desc" }, { lastChangeAt: "desc" }],
@@ -41,7 +47,7 @@ export default async function Home({ searchParams }: { searchParams: SP }) {
       </Suspense>
       {products.length === 0 ? (
         <p className="rounded-md border border-line bg-card p-4 text-sm text-muted">
-          Nenhuma oferta ainda. A varredura roda todo dia às 8h; em Lojas você pode rodar agora.
+          Nenhuma oferta com esses filtros. Experimente Qualquer caixa ou desligar Boas marcas.
         </p>
       ) : (
         <ul className="flex flex-col gap-2">

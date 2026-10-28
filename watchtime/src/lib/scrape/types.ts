@@ -7,6 +7,8 @@ export type ScrapedProduct = {
   price: number; // centavos
   listPrice?: number | null; // centavos
   available: boolean;
+  gender?: string | null; // masculino | feminino | unissex
+  caseMm?: number | null;
 };
 
 export type StoreInput = {

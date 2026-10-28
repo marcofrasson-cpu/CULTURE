@@ -16,6 +16,7 @@ export function Filters({ stores, brands }: Props) {
   }
 
   const sel = "h-9 rounded-md border border-line bg-card px-2 text-sm text-fg";
+  const good = sp.get("marcas") !== "todas";
   return (
     <div className="flex flex-col gap-2">
       <input
@@ -50,6 +51,29 @@ export function Filters({ stores, brands }: Props) {
           <option value="40">≥ 40%</option>
           <option value="50">≥ 50%</option>
         </select>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <select className={sel} value={sp.get("genero") ?? "masculino"} onChange={(e) => set("genero", e.target.value)}>
+          <option value="masculino">Masculino</option>
+          <option value="feminino">Feminino</option>
+          <option value="unissex">Unissex</option>
+          <option value="todos">Todos</option>
+        </select>
+        <select className={sel} value={sp.get("caixa") ?? "38"} onChange={(e) => set("caixa", e.target.value)}>
+          <option value="36">Caixa ≤ 36 mm</option>
+          <option value="38">Caixa ≤ 38 mm</option>
+          <option value="40">Caixa ≤ 40 mm</option>
+          <option value="42">Caixa ≤ 42 mm</option>
+          <option value="0">Qualquer caixa</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => set("marcas", good ? "todas" : "")}
+          className={`h-9 rounded-md border px-2 text-sm ${good ? "border-accent text-accent" : "border-line text-muted"}`}
+          aria-pressed={good}
+        >
+          Boas marcas
+        </button>
       </div>
     </div>
   );
