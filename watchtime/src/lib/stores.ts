@@ -5,7 +5,7 @@
  */
 export const SEED_STORES = [
   { slug: "vivara", name: "Vivara", domain: "www.vivara.com.br", path: "/vivara/relogios", adapter: "vtex" },
-  { slug: "timecenter", name: "Time Center", domain: "www.timecenter.com.br", path: "/relogios", adapter: "vtex" },
+  { slug: "timecenter", name: "Time Center", domain: "www.timecenter.com.br", path: "/relogio", adapter: "vtex" },
   { slug: "montecarlo", name: "Monte Carlo", domain: "www.montecarlo.com.br", path: "/relogios", adapter: "vtex" },
   { slug: "technos", name: "Technos", domain: "www.technos.com.br", path: "/relogio", adapter: "vtex" },
   { slug: "euro", name: "Euro", domain: "www.eurorelogios.com.br", path: "/relogio", adapter: "vtex" },

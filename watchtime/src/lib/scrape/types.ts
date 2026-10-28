@@ -27,7 +27,7 @@ export type Adapter = {
 export const UA =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
 
-export const MAX_PAGES = 30; // VTEX: 30 x 50 = 1500 itens por loja
+export const MAX_PAGES = 50; // VTEX: 50 x 50 = 2500 itens por loja (limite da própria VTEX)
 
 /** http só para loja local de teste (localhost:porta); produção sempre https. */
 export function baseUrl(domain: string): string {

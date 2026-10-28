@@ -30,24 +30,29 @@ export async function scanAll(opts: { onlySlug?: string } = {}): Promise<StoreRe
   const newDeals: { name: string; price: number; pct: number; store: string }[] = [];
   const watchHits: { productId: string; name: string; price: number }[] = [];
 
-  for (const store of stores) {
-    const run = await prisma.scanRun.create({ data: { storeId: store.id } });
-    try {
-      const { adapter, products } = await scrapeStore(store);
-      const { changed, deals, hits } = await persist(store.id, products);
-      newDeals.push(...deals.map((d) => ({ ...d, store: store.name })));
-      watchHits.push(...hits);
-      await prisma.scanRun.update({
-        where: { id: run.id },
-        data: { finishedAt: new Date(), adapter, found: products.length, changed },
-      });
-      results.push({ slug: store.slug, adapter, found: products.length, changed });
-    } catch (e) {
-      const error = (e instanceof Error ? e.message : String(e)).slice(0, 900);
-      await prisma.scanRun.update({ where: { id: run.id }, data: { finishedAt: new Date(), error } });
-      results.push({ slug: store.slug, found: 0, changed: 0, error });
+  // 3 lojas por vez: cabe nos 300 s da função mesmo com 2500 itens por loja.
+  const queue = [...stores];
+  const worker = async () => {
+    for (let store = queue.shift(); store; store = queue.shift()) {
+      const run = await prisma.scanRun.create({ data: { storeId: store.id } });
+      try {
+        const { adapter, products } = await scrapeStore(store);
+        const { changed, deals, hits } = await persist(store.id, products);
+        newDeals.push(...deals.map((d) => ({ ...d, store: store.name })));
+        watchHits.push(...hits);
+        await prisma.scanRun.update({
+          where: { id: run.id },
+          data: { finishedAt: new Date(), adapter, found: products.length, changed },
+        });
+        results.push({ slug: store.slug, adapter, found: products.length, changed });
+      } catch (e) {
+        const error = (e instanceof Error ? e.message : String(e)).slice(0, 900);
+        await prisma.scanRun.update({ where: { id: run.id }, data: { finishedAt: new Date(), error } });
+        results.push({ slug: store.slug, found: 0, changed: 0, error });
+      }
     }
-  }
+  };
+  await Promise.all([worker(), worker(), worker()]);
 
   await notify(newDeals, watchHits);
   return results;
