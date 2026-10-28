@@ -5,6 +5,7 @@ import { WatchButton } from "@/components/WatchButton";
 import { prisma } from "@/lib/db";
 import { brl } from "@/lib/money";
 import { discountPct } from "@/lib/score";
+import { displayName } from "@/components/DealCard";
 
 export const dynamic = "force-dynamic";
 
@@ -24,24 +25,29 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       <Link href="/" className="text-sm text-muted">
         ← Ofertas
       </Link>
-      <div className="rounded-md border border-line bg-card p-4 flex flex-col gap-3">
+      <div className="rounded-md border border-line bg-card p-4 grid gap-4 md:grid-cols-2 md:items-start">
         {p.image ? (
-          <div className="rounded bg-bg p-2">
+          <div className="rounded bg-white p-4 aspect-square flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.image} alt="" className="mx-auto max-h-64 object-contain" />
+            <img src={p.image} alt="" className="max-h-full max-w-full object-contain" />
           </div>
         ) : null}
-        <div className="text-xs text-muted">
-          {p.brand ? `${p.brand} · ` : ""}
-          {p.store.name}
+        <div className="flex flex-col gap-3 min-w-0">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-sm font-medium">{p.brand ?? "—"}</span>
+          <span className="text-xs text-muted">{p.store.name}</span>
         </div>
-        <h1 className="text-base leading-snug break-words">{p.name}</h1>
+        <h1 className="text-base leading-snug break-words">{displayName(p.name, p.brand)}</h1>
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="num text-2xl">{brl(p.price)}</span>
           {p.listPrice ? <span className="num text-sm text-muted line-through">{brl(p.listPrice)}</span> : null}
           {pct > 0 ? <span className="num text-sm text-accent">-{pct}%</span> : null}
         </div>
-        <dl className="grid grid-cols-3 gap-2 text-xs">
+        <dl className="grid grid-cols-4 gap-2 text-xs">
+          <div>
+            <dt className="text-muted">Caixa</dt>
+            <dd className="num">{p.caseMm ? `${p.caseMm} mm` : "—"}</dd>
+          </div>
           <div>
             <dt className="text-muted">Menor visto</dt>
             <dd className="num">{brl(p.minPrice)}</dd>
@@ -64,6 +70,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         >
           Ver na {p.store.name}
         </a>
+        </div>
       </div>
       <div className="rounded-md border border-line bg-card p-4">
         <WatchButton productId={p.id} watching={!!w} targetPrice={w?.targetPrice ?? null} price={p.price} />

@@ -18,7 +18,7 @@ export function Filters({ stores, brands }: Props) {
   const sel = "h-9 rounded-md border border-line bg-card px-2 text-sm text-fg";
   const good = sp.get("marcas") !== "todas";
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
       <input
         type="search"
         inputMode="search"
@@ -27,7 +27,7 @@ export function Filters({ stores, brands }: Props) {
         onChange={(e) => set("q", e.target.value.trim())}
         className="h-10 w-full rounded-md border border-line bg-card px-3 text-sm placeholder:text-muted"
       />
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 lg:contents">
         <select className={sel} value={sp.get("loja") ?? ""} onChange={(e) => set("loja", e.target.value)}>
           <option value="">Loja</option>
           {stores.map((s) => (
@@ -53,7 +53,7 @@ export function Filters({ stores, brands }: Props) {
           <option value="50">≥ 50%</option>
         </select>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 lg:col-span-2">
         <select className={sel} value={sp.get("genero") ?? "masculino"} onChange={(e) => set("genero", e.target.value)}>
           <option value="masculino">Masculino</option>
           <option value="feminino">Feminino</option>
