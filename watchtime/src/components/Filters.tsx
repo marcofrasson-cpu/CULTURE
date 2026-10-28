@@ -45,7 +45,8 @@ export function Filters({ stores, brands }: Props) {
           ))}
         </select>
         <select className={sel} value={sp.get("min") ?? ""} onChange={(e) => set("min", e.target.value)}>
-          <option value="">Desconto</option>
+          <option value="">Com ou sem desconto</option>
+          <option value="10">≥ 10%</option>
           <option value="20">≥ 20%</option>
           <option value="30">≥ 30%</option>
           <option value="40">≥ 40%</option>

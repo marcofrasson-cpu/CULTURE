@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { DealCard } from "@/components/DealCard";
 import { Filters } from "@/components/Filters";
 import { prisma } from "@/lib/db";
-import { MIN_FEED_DISCOUNT } from "@/lib/score";
 import { GOOD_BRANDS } from "@/lib/brands";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +10,7 @@ type SP = Promise<{ q?: string; loja?: string; marca?: string; min?: string; gen
 
 export default async function Home({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
-  const min = Number(sp.min) || MIN_FEED_DISCOUNT;
+  const min = Number(sp.min) || 0;
   const genero = sp.genero ?? "masculino";
   const caixa = sp.caixa == null ? 38 : Number(sp.caixa) || 0;
   const soBoas = sp.marcas !== "todas";
