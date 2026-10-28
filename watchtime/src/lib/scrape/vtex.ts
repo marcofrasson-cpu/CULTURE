@@ -1,6 +1,6 @@
 import { toCents } from "../money";
 import { parseSpecs } from "./specs";
-import { MAX_PAGES, baseUrl, type Adapter, type ScrapedProduct } from "./types";
+import { MAX_PAGES, baseUrl, type Adapter, type Fetcher, type ScrapedProduct } from "./types";
 
 type VtexItem = {
   itemId: string;
@@ -18,6 +18,21 @@ type VtexProduct = {
   [spec: string]: unknown;
 };
 
+/** Até 3 tentativas por página: VTEX devolve 500 ou corta a conexão sob carga. */
+async function fetchRetry(url: string, fetcher: Fetcher): Promise<Response> {
+  let last: Response | null = null;
+  for (let i = 0; i < 3; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 1500 * i));
+    try {
+      last = await fetcher(url, { headers: { accept: "application/json" } });
+      if (last.status < 500) return last;
+    } catch (e) {
+      if (i === 2) throw e;
+    }
+  }
+  return last as Response;
+}
+
 /**
  * Lojas VTEX expõem o catálogo em /api/catalog_system/pub/products/search/<categoria>.
  * Pagina de 50 em 50 (_from/_to), limite 2500 itens pela própria VTEX.
@@ -30,7 +45,7 @@ export const vtex: Adapter = {
     for (let page = 0; page < MAX_PAGES; page++) {
       const from = page * 50;
       const url = `${baseUrl(store.domain)}/api/catalog_system/pub/products/search/${cat}?_from=${from}&_to=${from + 49}`;
-      const res = await fetcher(url, { headers: { accept: "application/json" } });
+      const res = await fetchRetry(url, fetcher);
       if (res.status === 206 || res.ok) {
         const ct = res.headers.get("content-type") ?? "";
         if (!ct.includes("json")) throw new Error(`vtex: resposta não-JSON (${ct})`);

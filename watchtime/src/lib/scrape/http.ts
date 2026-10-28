@@ -3,7 +3,7 @@ import { UA, type Fetcher } from "./types";
 /** fetch com timeout e cabeçalhos de navegador móvel. */
 export const httpFetch: Fetcher = async (url, init) => {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 20_000);
+  const t = setTimeout(() => ctrl.abort(), 40_000);
   try {
     return await fetch(url, {
       ...init,
