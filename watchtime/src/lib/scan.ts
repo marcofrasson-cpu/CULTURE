@@ -11,8 +11,13 @@ export type StoreResult = { slug: string; adapter?: string; found: number; chang
 /** Garante que as lojas iniciais existem (não sobrescreve edições). */
 export async function ensureSeedStores() {
   for (const s of SEED_STORES) {
-    await prisma.store.upsert({ where: { slug: s.slug }, update: {}, create: { ...s } });
+    const { slug, ...rest } = s;
+    await prisma.store.upsert({ where: { slug }, update: { ...rest, enabled: true }, create: { slug, ...rest } });
   }
+  await prisma.store.updateMany({
+    where: { slug: { notIn: SEED_STORES.map((s) => s.slug) } },
+    data: { enabled: false },
+  });
 }
 
 export async function scanAll(opts: { onlySlug?: string } = {}): Promise<StoreResult[]> {
