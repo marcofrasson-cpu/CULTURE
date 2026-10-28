@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function Lojas() {
   await ensureSeedStores();
   const stores = await prisma.store.findMany({
+    where: { enabled: true },
     orderBy: { name: "asc" },
     include: { runs: { orderBy: { startedAt: "desc" }, take: 1 }, _count: { select: { products: true } } },
   });
