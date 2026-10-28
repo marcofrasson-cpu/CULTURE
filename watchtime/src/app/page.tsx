@@ -29,7 +29,7 @@ export default async function Home({ searchParams }: { searchParams: SP }) {
         ...(sp.q ? { OR: [{ name: { contains: sp.q, mode: "insensitive" } }, { brand: { contains: sp.q, mode: "insensitive" } }] } : {}),
       },
       orderBy: [{ score: "desc" }, { lastChangeAt: "desc" }],
-      take: 120,
+      take: 240,
       include: { store: { select: { name: true } } },
     }),
     prisma.scanRun.findFirst({ where: { finishedAt: { not: null }, error: null }, orderBy: { finishedAt: "desc" } }),
@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams: SP }) {
     <div className="flex flex-col gap-4">
       <header className="flex items-baseline justify-between gap-3 flex-wrap">
         <h1 className="text-base">
-          <span className="num">{products.length}{products.length >= 120 ? "+" : ""}</span> relógios
+          <span className="num">{products.length}{products.length >= 240 ? "+" : ""}</span> relógios
           {deals > 0 ? (
             <span className="text-muted">
               {" · "}
