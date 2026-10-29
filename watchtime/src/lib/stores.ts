@@ -15,6 +15,8 @@ export const SEED_STORES = [
   // Site público é Next.js; o catálogo VTEX responde no domínio técnico. Links são reescritos (PUBLIC_HOST).
   { slug: "frattina", name: "Frattina", domain: "lojafrattina.vtexcommercestable.com.br", path: "/relogios", adapter: "vtex" },
   { slug: "dryzun", name: "Dryzun", domain: "www.dryzun.com.br", path: "/relogios", adapter: "vtex" },
+  { slug: "clocksociety", name: "Clock Society", domain: "clocksociety.com.br", path: "/produtos/", adapter: "jsonld" },
+  { slug: "newstorerj", name: "New Store RJ", domain: "www.newstorerj.com.br", path: "/relogios", adapter: "tray" },
 ] as const;
 
 /** Lojas cujo catálogo é lido em um domínio e o link do produto fica em outro. */

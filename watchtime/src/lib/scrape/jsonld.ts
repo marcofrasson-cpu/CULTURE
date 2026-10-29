@@ -1,5 +1,7 @@
 import * as cheerio from "cheerio";
 import { toCents } from "../money";
+import { inferBrand } from "../brands";
+import { parseSpecs } from "./specs";
 import { MAX_PAGES, baseUrl, type Adapter, type ScrapedProduct } from "./types";
 
 type Offer = { price?: string | number; lowPrice?: string | number; highPrice?: string | number; availability?: string; url?: string };
@@ -12,6 +14,7 @@ type LdProduct = {
   image?: string | string[] | { url?: string };
   brand?: string | { name?: string };
   offers?: Offer | Offer[];
+  mainEntityOfPage?: string | { "@id"?: string };
 };
 
 function asArray<T>(v: T | T[] | undefined | null): T[] {
@@ -59,12 +62,15 @@ export function parseJsonLdHtml(html: string, base: string): ScrapedProduct[] {
       const price = toCents(o?.price ?? o?.lowPrice ?? null);
       if (!price) continue;
       const high = toCents(o?.highPrice ?? null);
-      const url = p.url ?? o?.url;
+      const main = typeof p.mainEntityOfPage === "object" ? p.mainEntityOfPage?.["@id"] : p.mainEntityOfPage;
+      const url = p.url ?? o?.url ?? main;
       if (!url || !p.name) continue;
       const abs = new URL(url, base).toString();
       const img = Array.isArray(p.image) ? p.image[0] : typeof p.image === "object" ? p.image?.url : p.image;
-      const brand = typeof p.brand === "object" ? p.brand?.name : p.brand;
+      const brand = (typeof p.brand === "object" ? p.brand?.name : p.brand) ?? inferBrand(p.name);
+      const specs = parseSpecs(p.name, [], {});
       out.push({
+        ...specs,
         externalId: p.sku ?? p.productID ?? abs,
         url: abs,
         name: p.name,

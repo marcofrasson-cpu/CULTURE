@@ -2,9 +2,10 @@ import { httpFetch } from "./http";
 import { jsonld } from "./jsonld";
 import { shopify } from "./shopify";
 import type { Adapter, Fetcher, ScrapedProduct, StoreInput } from "./types";
+import { tray } from "./tray";
 import { vtex } from "./vtex";
 
-export const adapters: Record<string, Adapter> = { vtex, jsonld, shopify };
+export const adapters: Record<string, Adapter> = { vtex, jsonld, shopify, tray };
 
 export type ScrapeResult = { adapter: string; products: ScrapedProduct[] };
 

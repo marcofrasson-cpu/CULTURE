@@ -11,4 +11,20 @@ export const GOOD_BRANDS = [
   "Hublot", "IWC Schaffhausen", "Jaeger-LeCoultre", "Panerai", "Bvlgari", "Bulgari", "Chopard",
   "Audemars Piguet", "Patek Philippe", "Vacheron Constantin", "Breguet", "Blancpain",
   "Girard-Perregaux", "Ulysse Nardin", "Bell & Ross", "Piaget", "Jaquet Droz", "Glashütte Original",
+  // importados / microbrands (Clock Society, New Store RJ)
+  "Christopher Ward", "Baltic", "Beaubleu", "Nivada Grenchen", "Raketa", "Brew", "Vulcain", "Yema",
+  "Lorier", "Farer", "Dan Henry", "Spinnaker", "Squale", "Doxa", "Steinhart", "Formex", "Furlan Marri",
+  "Serica", "Unimatic", "Halios", "Ming", "Rec", "Marathon", "Zodiac", "Traska", "Monta", "Mido",
+  "Laco", "Stowa", "Archimede", "Damasko", "Fortis", "Oris", "Eterna", "Alpina", "Rado", "Movado",
 ];
+
+/** Deduz a marca pelo nome do produto (lojas que não a informam em campo próprio). */
+export function inferBrand(name: string): string | null {
+  const n = ` ${name.toLowerCase()} `;
+  let best: string | null = null;
+  for (const b of GOOD_BRANDS) {
+    const t = ` ${b.toLowerCase()} `;
+    if (n.includes(t) && (!best || b.length > best.length)) best = b;
+  }
+  return best;
+}

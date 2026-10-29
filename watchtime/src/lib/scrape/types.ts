@@ -19,7 +19,7 @@ export type StoreInput = {
 export type Fetcher = (url: string, init?: RequestInit) => Promise<Response>;
 
 export type Adapter = {
-  name: "vtex" | "jsonld" | "shopify";
+  name: "vtex" | "jsonld" | "shopify" | "tray";
   /** Lança erro quando a loja não responde nesse formato. */
   run(store: StoreInput, fetcher: Fetcher): Promise<ScrapedProduct[]>;
 };
