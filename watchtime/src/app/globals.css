@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --fg: #f1f5f9;
+  --muted: #94a3b8;
+  --line: rgba(241, 245, 249, 0.08);
+  --accent: #10b981;
+  --danger: #f87171;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --font-sans: -apple-system, BlinkMacSystemFont, Inter, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  background: var(--bg);
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+a,
+button {
+  -webkit-touch-callout: none;
+}
+
+input,
+select {
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fade {
+    transition: opacity 150ms ease-out;
+  }
+}

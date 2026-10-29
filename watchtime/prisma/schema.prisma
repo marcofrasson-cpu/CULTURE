@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Store {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  domain    String
+  adapter   String    @default("auto") // auto | vtex | jsonld | shopify
+  path      String    // caminho da categoria de relógios (ex.: /relogios)
+  enabled   Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  products  Product[]
+  runs      ScanRun[]
+}
+
+model Product {
+  id           String         @id @default(cuid())
+  storeId      String
+  store        Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  externalId   String
+  url          String
+  name         String
+  brand        String?
+  image        String?
+  price        Int            // centavos
+  listPrice    Int?           // preço "de", centavos
+  minPrice     Int            // menor preço já visto
+  maxPrice     Int
+  prevPrice    Int?           // preço na varredura anterior
+  available    Boolean        @default(true)
+  gender       String?        // masculino | feminino | unissex
+  caseMm       Int?           // diâmetro/largura da caixa em mm
+  firstSeenAt  DateTime       @default(now())
+  lastSeenAt   DateTime       @default(now())
+  lastChangeAt DateTime       @default(now())
+  score        Int            @default(0)
+  history      PriceHistory[]
+  watches      Watch[]
+
+  @@unique([storeId, externalId])
+  @@index([score])
+  @@index([brand])
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price     Int
+  listPrice Int?
+  seenAt    DateTime @default(now())
+
+  @@index([productId, seenAt])
+}
+
+model Watch {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  targetPrice Int?     // avisa quando price <= targetPrice; null = qualquer queda
+  createdAt   DateTime @default(now())
+  notifiedAt  DateTime?
+
+  @@unique([productId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
+
+model ScanRun {
+  id         String    @id @default(cuid())
+  storeId    String
+  store      Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  adapter    String?
+  found      Int       @default(0)
+  changed    Int       @default(0)
+  error      String?
+
+  @@index([storeId, startedAt])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
