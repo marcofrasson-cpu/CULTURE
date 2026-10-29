@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import type { Prisma } from "@/generated/prisma/client";
 import { scrapeStore } from "./scrape";
 import type { ScrapedProduct } from "./scrape/types";
 import { MIN_PUSH_DISCOUNT, discountPct, scoreDeal } from "./score";
@@ -70,69 +71,81 @@ export async function scanAll(opts: { onlySlug?: string } = {}): Promise<StoreRe
   return results;
 }
 
-async function persist(storeId: string, products: ScrapedProduct[]) {
+export async function persist(storeId: string, products: ScrapedProduct[]) {
   let changed = 0;
   const deals: { name: string; price: number; pct: number }[] = [];
   const hits: { productId: string; name: string; price: number }[] = [];
   const now = new Date();
 
-  for (const p of products) {
-    const existing = await prisma.product.findUnique({
-      where: { storeId_externalId: { storeId, externalId: p.externalId } },
-      include: { watches: true },
-    });
-    const listPrice = p.listPrice ?? null;
+  // Uma consulta por loja em vez de uma por produto: 13 mil idas ao banco viravam minutos.
+  const existingRows = await prisma.product.findMany({ where: { storeId }, include: { watches: true } });
+  const existing = new Map(existingRows.map((r) => [r.externalId, r]));
 
-    if (!existing) {
-      const minPrice = p.price;
-      const score = scoreDeal({ price: p.price, listPrice, minPrice, prevPrice: null });
-      const created = await prisma.product.create({
-        data: {
-          storeId,
-          externalId: p.externalId,
-          url: p.url,
-          name: p.name,
-          brand: p.brand ?? null,
-          image: p.image ?? null,
-          price: p.price,
-          listPrice,
-          minPrice,
-          maxPrice: listPrice ?? p.price,
-          available: p.available,
-          gender: p.gender ?? null,
-          caseMm: p.caseMm ?? null,
-          score,
-          history: { create: { price: p.price, listPrice } },
-        },
+  const toCreate: Prisma.ProductCreateManyInput[] = [];
+  const unchangedIds: string[] = [];
+
+  for (const p of products) {
+    const listPrice = p.listPrice ?? null;
+    const row = existing.get(p.externalId);
+
+    if (!row) {
+      const score = scoreDeal({ price: p.price, listPrice, minPrice: p.price, prevPrice: null });
+      toCreate.push({
+        storeId,
+        externalId: p.externalId,
+        url: p.url,
+        name: p.name,
+        brand: p.brand ?? null,
+        image: p.image ?? null,
+        price: p.price,
+        listPrice,
+        minPrice: p.price,
+        maxPrice: listPrice ?? p.price,
+        available: p.available,
+        gender: p.gender ?? null,
+        caseMm: p.caseMm ?? null,
+        score,
       });
       const pct = discountPct(p.price, listPrice);
-      if (pct >= MIN_PUSH_DISCOUNT) deals.push({ name: created.name, price: p.price, pct });
+      if (pct >= MIN_PUSH_DISCOUNT) deals.push({ name: p.name, price: p.price, pct });
       continue;
     }
 
-    const priceChanged = existing.price !== p.price || (existing.listPrice ?? null) !== listPrice;
-    const minPrice = Math.min(existing.minPrice, p.price);
-    const maxPrice = Math.max(existing.maxPrice, listPrice ?? p.price);
-    const prevPrice = priceChanged ? existing.price : existing.prevPrice;
+    const priceChanged = row.price !== p.price || (row.listPrice ?? null) !== listPrice;
+    const metaChanged =
+      row.available !== p.available ||
+      (p.gender != null && row.gender !== p.gender) ||
+      (p.caseMm != null && row.caseMm !== p.caseMm) ||
+      (p.brand != null && row.brand !== p.brand) ||
+      row.url !== p.url;
+
+    if (!priceChanged && !metaChanged) {
+      unchangedIds.push(row.id);
+      continue;
+    }
+
+    const minPrice = Math.min(row.minPrice, p.price);
+    const maxPrice = Math.max(row.maxPrice, listPrice ?? p.price);
+    const prevPrice = priceChanged ? row.price : row.prevPrice;
     const score = scoreDeal({ price: p.price, listPrice, minPrice, prevPrice });
 
     await prisma.product.update({
-      where: { id: existing.id },
+      where: { id: row.id },
       data: {
         url: p.url,
         name: p.name,
-        brand: p.brand ?? existing.brand,
-        image: p.image ?? existing.image,
+        brand: p.brand ?? row.brand,
+        image: p.image ?? row.image,
         price: p.price,
         listPrice,
         minPrice,
         maxPrice,
         prevPrice,
         available: p.available,
-        gender: p.gender ?? existing.gender,
-        caseMm: p.caseMm ?? existing.caseMm,
+        gender: p.gender ?? row.gender,
+        caseMm: p.caseMm ?? row.caseMm,
         lastSeenAt: now,
-        lastChangeAt: priceChanged ? now : existing.lastChangeAt,
+        lastChangeAt: priceChanged ? now : row.lastChangeAt,
         score,
         ...(priceChanged ? { history: { create: { price: p.price, listPrice } } } : {}),
       },
@@ -140,16 +153,29 @@ async function persist(storeId: string, products: ScrapedProduct[]) {
 
     if (priceChanged) {
       changed++;
-      const dropped = p.price < existing.price;
+      const dropped = p.price < row.price;
       const pct = discountPct(p.price, listPrice);
       if (dropped && pct >= MIN_PUSH_DISCOUNT) deals.push({ name: p.name, price: p.price, pct });
-      const w = existing.watches[0];
+      const w = row.watches[0];
       if (w && dropped && (w.targetPrice == null || p.price <= w.targetPrice)) {
-        hits.push({ productId: existing.id, name: p.name, price: p.price });
+        hits.push({ productId: row.id, name: p.name, price: p.price });
         await prisma.watch.update({ where: { id: w.id }, data: { notifiedAt: now } });
       }
     }
   }
+
+  // Novos: insere em lote e abre o histórico de cada um.
+  for (let i = 0; i < toCreate.length; i += 500) {
+    const created = await prisma.product.createManyAndReturn({ data: toCreate.slice(i, i + 500), select: { id: true, price: true, listPrice: true } });
+    await prisma.priceHistory.createMany({ data: created.map((c) => ({ productId: c.id, price: c.price, listPrice: c.listPrice })) });
+  }
+  // Sem mudança: só marca que foi visto hoje.
+  for (let i = 0; i < unchangedIds.length; i += 2000) {
+    await prisma.product.updateMany({ where: { id: { in: unchangedIds.slice(i, i + 2000) } }, data: { lastSeenAt: now } });
+  }
+  // Sumiu do catálogo da loja: sai do feed.
+  await prisma.product.updateMany({ where: { storeId, available: true, lastSeenAt: { lt: now } }, data: { available: false } });
+
   return { changed, deals, hits };
 }
 
