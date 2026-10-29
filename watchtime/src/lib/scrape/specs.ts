@@ -12,7 +12,7 @@ export function parseSpecs(name: string, specKeys: string[], obj: Record<string,
     if (!gender && /g[êe]nero|sexo|p[úu]blico/.test(kl) && !/xml/.test(kl)) {
       gender = normGender(get(k).join(" "));
     }
-    if (caseMm == null && /caixa/.test(kl) && /tamanho|largura|di[âa]metro/.test(kl) && !/pulseira|vidro|espessura|altura/.test(kl)) {
+    if (caseMm == null && /caixa/.test(kl) && /tamanho|largura|di[âa]metro|modelcase|caixa do modelo/.test(kl) && !/pulseira|vidro|espessura|altura/.test(kl)) {
       caseMm = parseMm(get(k)[0] ?? "", /\(cm\)|\bcm\b/.test(kl));
     }
   }
@@ -28,7 +28,7 @@ export function normGender(s: string): string | null {
   const t = s.toLowerCase();
   if (/unissex|unisex/.test(t)) return "unissex";
   if (/masculin|\bmen\b|\bhomem/.test(t)) return "masculino";
-  if (/feminin|\bwomen\b|\bmulher/.test(t)) return "feminino";
+  if (/feminin|\bwomen\b|\bwoman\b|\bmulher|\blady\b|\bladies\b|\bsenhora/.test(t)) return "feminino";
   return null;
 }
 

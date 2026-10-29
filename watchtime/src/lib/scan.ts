@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { scrapeStore } from "./scrape";
 import type { ScrapedProduct } from "./scrape/types";
 import { MIN_PUSH_DISCOUNT, discountPct, scoreDeal } from "./score";
-import { SEED_STORES, STORE_GROUP } from "./stores";
+import { PUBLIC_HOST, SEED_STORES, STORE_GROUP } from "./stores";
 import { sendToAll } from "./push";
 import { brl } from "./money";
 
@@ -45,6 +45,8 @@ export async function scanAll(opts: { onlySlug?: string } = {}): Promise<StoreRe
       const run = await prisma.scanRun.create({ data: { storeId: store.id } });
       try {
         const { adapter, products } = await scrapeStore(store);
+        const host = PUBLIC_HOST[store.slug];
+        if (host) for (const p of products) p.url = p.url.replace(/^https?:\/\/[^/]+/, `https://${host}`);
         const { changed, deals, hits } = await persist(store.id, products);
         newDeals.push(...deals.map((d) => ({ ...d, store: store.name })));
         watchHits.push(...hits);

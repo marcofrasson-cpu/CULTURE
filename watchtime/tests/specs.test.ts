@@ -12,6 +12,16 @@ describe("parseMm", () => {
   });
 });
 
+describe("parseSpecs (lojas de alta relojoaria)", () => {
+  it("Frattina: faixa ignorada, mm vem do nome/linkText; Lady vira feminino", () => {
+    expect(parseSpecs("Relógio TAG Heuer Aquaracer relogio-aquaracer-34mm-wbp1315", ["Tamanho"], { Tamanho: ["30mm a 34mm"] })).toEqual({ gender: null, caseMm: 34 });
+    expect(parseSpecs("Hublot Classic Fusion Lady 33mm", [], {})).toEqual({ gender: "feminino", caseMm: 33 });
+  });
+  it("Dryzun: Caixa do Modelo", () => {
+    expect(parseSpecs("Relógio Tudor Black Bay", ["Spec_ModelCase (Caixa do Modelo)"], { "Spec_ModelCase (Caixa do Modelo)": ["41 mm, Aço"] })).toEqual({ gender: null, caseMm: 41 });
+  });
+});
+
 describe("parseSpecs", () => {
   it("lê gênero e caixa das specs", () => {
     const r = parseSpecs("Relógio Fossil Minimalist", ["Gênero", "Largura da Caixa (cm)", "Tamanho"], {

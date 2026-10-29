@@ -57,7 +57,7 @@ export const vtex: Adapter = {
           const price = toCents(offer?.Price ?? null);
           if (!price) continue;
           const listPrice = toCents(offer?.ListPrice ?? null);
-          const specs = parseSpecs(p.productName, p.allSpecifications ?? [], p);
+          const specs = parseSpecs(`${p.productName} ${p.linkText ?? ""}`, p.allSpecifications ?? [], p);
           out.push({
             ...specs,
             externalId: p.productId,

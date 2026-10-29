@@ -24,7 +24,12 @@ export default async function Home({ searchParams }: { searchParams: SP }) {
         score: { gte: min },
         ...(sp.loja ? { store: { slug: sp.loja } } : {}),
         ...(sp.marca ? { brand: sp.marca } : soBoas ? { brand: { in: GOOD_BRANDS, mode: "insensitive" } } : {}),
-        ...(genero !== "todos" ? { gender: genero } : {}),
+        // Masculino inclui unissex e lojas que não informam gênero (Frattina, Dryzun).
+        ...(genero === "masculino"
+          ? { OR: [{ gender: "masculino" }, { gender: "unissex" }, { gender: null }] }
+          : genero !== "todos"
+            ? { gender: genero }
+            : {}),
         ...(caixa > 0 ? { caseMm: { lte: caixa } } : {}),
         ...(sp.q ? { OR: [{ name: { contains: sp.q, mode: "insensitive" } }, { brand: { contains: sp.q, mode: "insensitive" } }] } : {}),
       },

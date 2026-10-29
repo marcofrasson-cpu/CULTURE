@@ -12,7 +12,15 @@ export const SEED_STORES = [
   { slug: "fossil", name: "Fossil", domain: "www.fossil.com.br", path: "/relogio", adapter: "vtex" },
   { slug: "mondaine", name: "Mondaine", domain: "www.mondaine.com.br", path: "/relogios", adapter: "vtex" },
   { slug: "seculus", name: "Seculus", domain: "www.seculus.com.br", path: "/relogios", adapter: "vtex" },
+  // Site público é Next.js; o catálogo VTEX responde no domínio técnico. Links são reescritos (PUBLIC_HOST).
+  { slug: "frattina", name: "Frattina", domain: "lojafrattina.vtexcommercestable.com.br", path: "/relogios", adapter: "vtex" },
+  { slug: "dryzun", name: "Dryzun", domain: "www.dryzun.com.br", path: "/relogios", adapter: "vtex" },
 ] as const;
+
+/** Lojas cujo catálogo é lido em um domínio e o link do produto fica em outro. */
+export const PUBLIC_HOST: Record<string, string> = {
+  frattina: "www.frattina.com.br",
+};
 
 /** Lojas que dividem o mesmo servidor VTEX: lidas uma de cada vez para não tomar 500. */
 export const STORE_GROUP: Record<string, string> = {

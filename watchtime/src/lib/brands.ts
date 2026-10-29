@@ -8,4 +8,7 @@ export const GOOD_BRANDS = [
   "Frederique Constant", "Festina", "Lorus", "Luminox", "Wenger", "Baume & Mercier", "Montblanc",
   "Omega", "Breitling", "Tudor", "Rolex", "Cartier", "Zenith", "IWC", "Grand Seiko", "Junghans",
   "Nomos", "Sinn", "Maurice Lacroix", "Raymond Weil", "Glycine", "Vostok", "Fossil",
+  "Hublot", "IWC Schaffhausen", "Jaeger-LeCoultre", "Panerai", "Bvlgari", "Bulgari", "Chopard",
+  "Audemars Piguet", "Patek Philippe", "Vacheron Constantin", "Breguet", "Blancpain",
+  "Girard-Perregaux", "Ulysse Nardin", "Bell & Ross", "Piaget", "Jaquet Droz", "Glashütte Original",
 ];
